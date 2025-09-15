@@ -115,6 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderTable = () => {
+        // 1. 현재 포커스된 요소와 커서 위치를 기억합니다.
+        const activeElement = document.activeElement;
+        const activeIndex = activeElement.dataset ? activeElement.dataset.index : null;
+        const activeField = activeElement.dataset ? activeElement.dataset.field : null;
+        const selectionStart = activeElement.selectionStart;
+        const selectionEnd = activeElement.selectionEnd;
+
         estimateItemsEl.innerHTML = '';
         let total = 0;
 
@@ -125,7 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             row.innerHTML = `
                 <td>${index + 1}</td>
-                <td><input type="text" class="item-name-input" data-index="${index}" data-field="name" value="${item.name}"></td>
+                <td>
+                    <div class="item-name-input-wrapper">
+                        <input type="text" class="item-name-input" data-index="${index}" data-field="name" value="${item.name}">
+                        <button class="select-product-btn print-hide" data-index="${index}"><i class="fas fa-search"></i></button>
+                    </div>
+                </td>
                 <td><input type="number" class="item-input" data-index="${index}" data-field="qty" value="${item.qty}" placeholder="0"></td>
                 <td><input type="text" class="item-input" data-index="${index}" data-field="price" value="${formatNumber(item.price)}" placeholder="0"></td>
                 <td>${formatNumber(amount)}</td>
@@ -135,6 +147,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         totalAmountEl.textContent = formatNumber(total);
         saveState();
+
+        // 2. 기억해둔 위치로 포커스를 되돌립니다.
+        if (activeIndex && activeField) {
+            const newActiveElement = estimateItemsEl.querySelector(`[data-index="${activeIndex}"][data-field="${activeField}"]`);
+            if (newActiveElement) {
+                newActiveElement.focus();
+                try {
+                    newActiveElement.setSelectionRange(selectionStart, selectionEnd);
+                } catch (e) {
+                    // 일부 입력 타입에서는 setSelectionRange가 실패할 수 있으므로 오류를 무시합니다.
+                }
+            }
+        }
     };
 
     const renderProductList = () => {
@@ -154,17 +179,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    let activeRowIndex = null; // 품목 선택 시 현재 행의 인덱스를 추적
+
     // --- Event Handlers ---
     const handleItemChange = (e) => {
         const index = parseInt(e.target.dataset.index, 10);
         const field = e.target.dataset.field;
-        let value = e.target.value;
+        const value = e.target.value;
 
+        // 품명/규격 입력 시: 화면을 다시 그리지 않고 상태만 업데이트
+        if (field === 'name') {
+            state.items[index].name = value;
+            saveState(); // 값 저장은 하되, 화면은 그대로 둠
+            return; // 여기서 함수 종료
+        }
+
+        // 수량 또는 단가 입력 시: 상태 업데이트 후 화면을 다시 그려서 계산
         if (field === 'price') {
-            state.items[index][field] = parseNumber(value);
-            e.target.value = formatNumber(value); // Re-format the input field
-        } else {
-            state.items[index][field] = value;
+            state.items[index].price = parseNumber(value);
+        } else { // field === 'qty'
+            state.items[index].qty = value;
         }
         renderTable();
     };
@@ -184,14 +218,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const handleSelectProduct = (product) => {
-        const emptyRowIndex = state.items.findIndex(item => item.name === '' && item.qty === '' && item.price === '');
-        if (emptyRowIndex !== -1) {
-            state.items[emptyRowIndex] = { ...state.items[emptyRowIndex], name: product.name, qty: '1', price: product.price };
+        // activeRowIndex가 null이 아니면, 특정 행을 수정하는 중
+        if (activeRowIndex !== null) {
+            const index = parseInt(activeRowIndex, 10);
+            state.items[index].name = product.name;
+            state.items[index].price = product.price;
+            // 수량이 비어있으면 1로 설정
+            if (!state.items[index].qty || state.items[index].qty === '0') {
+                state.items[index].qty = '1';
+            }
         } else {
-            state.items.push({ id: Date.now(), name: product.name, qty: '1', price: product.price });
+            // 기존 로직: 비어있는 행을 찾거나 새로 추가
+            const emptyRowIndex = state.items.findIndex(item => item.name === '' && item.qty === '' && item.price === '');
+            if (emptyRowIndex !== -1) {
+                state.items[emptyRowIndex] = { ...state.items[emptyRowIndex], name: product.name, qty: '1', price: product.price };
+            } else {
+                state.items.push({ id: Date.now(), name: product.name, qty: '1', price: product.price });
+            }
         }
         renderTable();
         closeModal(productModal);
+        activeRowIndex = null; // 작업 완료 후 초기화
     };
 
     // --- Modal Handling ---
@@ -209,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sealPreview.style.display = state.sealImage ? 'block' : 'none';
     });
     productSettingsBtn.addEventListener('click', () => {
+        activeRowIndex = null; // 관리 모드에서는 특정 행 선택이 아님
         closeModal(mainMenuModal);
         openModal(productModal);
     });
@@ -364,6 +412,12 @@ document.addEventListener('DOMContentLoaded', () => {
     estimateItemsEl.addEventListener('click', (e) => {
         if (e.target.closest('.delete-item-btn')) {
             handleDeleteItemRow(parseInt(e.target.closest('.delete-item-btn').dataset.index, 10));
+        }
+        // 새로운 기능: 품명/규격 옆의 버튼 클릭 시 품목 선택창 열기
+        if (e.target.closest('.select-product-btn')) {
+            const index = e.target.closest('.select-product-btn').dataset.index;
+            activeRowIndex = index;
+            openModal(productModal);
         }
     });
     customerNameEl.addEventListener('input', (e) => {

@@ -44,6 +44,7 @@ body {
     font-size: 1.2em;
 }
 
+/*
 @media screen and (orientation: portrait) and (max-width: 768px) {
     #orientation-warning {
         display: flex;
@@ -52,6 +53,7 @@ body {
         display: none;
     }
 }
+*/
 
 @media print {
     .print-hide {
@@ -411,4 +413,24 @@ footer {
     color: var(--danger-color);
     cursor: pointer;
     font-size: 1.1em;
+}
+
+/* Styles for the new select product button */
+.item-name-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.item-name-input-wrapper .item-name-input {
+    flex-grow: 1;
+    border: none; /* Remove border from input inside wrapper */
+    padding: 5px; /* Adjust padding */
+}
+.select-product-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 5px;
 }
