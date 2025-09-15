@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>견적서</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div id="orientation-warning">
+        <p>이 앱은 가로 모드에 최적화되어 있습니다.<br>기기를 돌려 가로로 사용해 주세요.</p>
+    </div>
+
+    <div id="app-container">
+        <div id="estimate-sheet">
+            <header>
+                <h1>견적서</h1>
+                <div class="header-controls">
+                    <input type="date" id="issue-date" class="control-item">
+                    <button id="main-menu-btn" class="control-item print-hide"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <main>
+                <div class="info-section">
+                    <div class="info-box customer-info">
+                        <h2>고객</h2>
+                        <input type="text" id="customer-name" placeholder="상호 또는 성명" lang="ko">
+                        <textarea id="remarks" placeholder="비고 (2줄 입력 가능)" rows="2" class="remarks-input"></textarea>
+                    </div>
+                    <div class="info-box supplier-info">
+                        <h2>공급자</h2>
+                        <div id="supplier-display">
+                            <p><strong>상호:</strong> <span id="supplier-company"></span></p>
+                            <p><strong>담당자:</strong> <span id="supplier-person"></span> <img id="seal-image-display" src="" alt="직인"></p>
+                            <p><strong>연락처:</strong> <span id="supplier-phone"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-no">No.</th>
+                                <th class="col-item">품명/규격</th>
+                                <th class="col-qty">수량</th>
+                                <th class="col-price">단가</th>
+                                <th class="col-amount">금액</th>
+                                <th class="col-actions print-hide"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="estimate-items">
+                            <!-- 자바스크립트로 항목이 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="add-item-btn" class="print-hide"><i class="fas fa-plus"></i> 항목 추가</button>
+
+                <div class="summary-section">
+                    <div class="total-amount">
+                        <p><strong>총 합계:</strong> <span id="total-amount">0</span> 원</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="print-hide">
+            <button class="footer-btn" id="save-image-btn"><i class="fas fa-share-square"></i> 이미지로 저장</button>
+        </footer>
+    </div>
+
+    <!-- Main Menu Modal -->
+    <div id="main-menu-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="menu-button" id="supplier-settings-btn">공급업체 설정</button>
+            <button class="menu-button" id="product-settings-btn">품명/규격 관리</button>
+            <div class="modal-actions">
+                <button class="close-modal-btn" data-target="main-menu-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Modal -->
+    <div id="supplier-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>공급업체 정보 설정</h2>
+            <input type="text" id="modal-supplier-company" placeholder="상호">
+            <input type="text" id="modal-supplier-person" placeholder="담당자">
+            <input type="text" id="modal-supplier-phone" placeholder="연락처">
+            <div class="seal-upload">
+                <label for="seal-upload-input">직인 이미지 (선택 사항)</label>
+                <input type="file" id="seal-upload-input" accept="image/*">
+                <img id="seal-preview" src="#" alt="직인 미리보기" style="display: none;">
+            </div>
+            <div class="modal-actions">
+                <button class="save-btn" id="save-supplier-btn">저장</button>
+                <button class="close-modal-btn" data-target="supplier-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>품명/규격 관리</h2>
+            <div class="product-add-form">
+                <input type="text" id="new-product-name" placeholder="품명/규격" style="flex: 2;">
+                <input type="number" id="new-product-price" placeholder="단가" style="flex: 1;">
+                <button id="add-product-btn" class="save-btn">추가</button>
+            </div>
+            <div id="product-list-container">
+                <ul id="product-list">
+                    <!-- 저장된 품목 리스트 -->
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn" data-target="product-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
