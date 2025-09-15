@@ -226,20 +226,49 @@ document.addEventListener('DOMContentLoaded', () => {
             contactPerson: modalSupplierPerson.value,
             phone: modalSupplierPhone.value,
         };
+
         const file = sealUploadInput.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                state.sealImage = reader.result;
-                renderSupplierInfo();
-                saveState();
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const threshold = 240; // 흰색으로 간주할 밝기 임계값
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        // 픽셀이 흰색에 가까우면 투명하게 만듭니다.
+                        if (r > threshold && g > threshold && b > threshold) {
+                            data[i + 3] = 0; // Alpha 채널을 0으로 설정
+                        }
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    state.sealImage = canvas.toDataURL('image/png');
+                    renderSupplierInfo();
+                    saveState();
+                    closeModal(supplierModal);
+                };
+                img.src = reader.result;
             };
             reader.readAsDataURL(file);
         } else {
+            // 새 파일이 선택되지 않은 경우, 텍스트 정보만 저장합니다.
             renderSupplierInfo();
             saveState();
+            closeModal(supplierModal);
         }
-        closeModal(supplierModal);
     });
 
     sealUploadInput.addEventListener('change', (e) => {
@@ -284,7 +313,15 @@ document.addEventListener('DOMContentLoaded', () => {
     saveImageBtn.addEventListener('click', async () => {
         const sheet = document.getElementById('estimate-sheet');
         const printHideElements = sheet.querySelectorAll('.print-hide');
-        printHideElements.forEach(el => el.style.visibility = 'hidden');
+        
+        // Hide elements smartly
+        printHideElements.forEach(el => {
+            if (el.tagName === 'TD' || el.tagName === 'TH') {
+                Array.from(el.children).forEach(child => child.style.visibility = 'hidden');
+            } else {
+                el.style.visibility = 'hidden';
+            }
+        });
 
         try {
             const canvas = await html2canvas(sheet, {
@@ -310,7 +347,14 @@ document.addEventListener('DOMContentLoaded', () => {
             link.href = canvas.toDataURL('image/png');
             link.click();
         } finally {
-            printHideElements.forEach(el => el.style.visibility = 'visible');
+            // Restore visibility smartly
+            printHideElements.forEach(el => {
+                if (el.tagName === 'TD' || el.tagName === 'TH') {
+                    Array.from(el.children).forEach(child => child.style.visibility = 'visible');
+                } else {
+                    el.style.visibility = 'visible';
+                }
+            });
         }
     });
 
