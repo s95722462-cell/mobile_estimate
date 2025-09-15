@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="select-product-btn print-hide" data-index="${index}"><i class="fas fa-search"></i></button>
                     </div>
                 </td>
-                <td><input type="number" class="item-input" data-index="${index}" data-field="qty" value="${item.qty}" placeholder="0"></td>
+                <td><input type="text" class="item-input" data-index="${index}" data-field="qty" value="${item.qty}" placeholder="0"></td>
                 <td><input type="text" class="item-input" data-index="${index}" data-field="price" value="${formatNumber(item.price)}" placeholder="0"></td>
                 <td>${formatNumber(amount)}</td>
                 <td class="print-hide"><button class="delete-item-btn" data-index="${index}"><i class="fas fa-trash-alt"></i></button></td>
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- General Event Listeners ---
     addItemBtn.addEventListener('click', handleAddItemRow);
-    estimateItemsEl.addEventListener('input', handleItemChange);
+    estimateItemsEl.addEventListener('change', handleItemChange);
     estimateItemsEl.addEventListener('click', (e) => {
         if (e.target.closest('.delete-item-btn')) {
             handleDeleteItemRow(parseInt(e.target.closest('.delete-item-btn').dataset.index, 10));
